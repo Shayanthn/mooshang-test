@@ -1,0 +1,25 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+database/*.json
+database/*.lock
+
+# Logs
+logs/*.log
+
+# User specific files
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db

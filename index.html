@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>اتوماسیون کلینیک</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="background-elements">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="form-wrapper">
+        <div class="header-section">
+            <div class="logo-container">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <h1>درخواست اطلاعات بیمار</h1>
+            <p class="subtitle">لطفاً اطلاعات خود را با دقت وارد کنید</p>
+        </div>
+
+        <form id="clinic-form" class="form-container">
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i>
+                    اطلاعات شخصی
+                </h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-user-circle"></i>
+                            <input type="text" id="first-name" name="firstName" placeholder="نام" required>
+                        </div>
+                        <label for="first-name">نام</label>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-user-circle"></i>
+                            <input type="text" id="last-name" name="lastName" placeholder="نام خانوادگی" required>
+                        </div>
+                        <label for="last-name">نام خانوادگی</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="phone" name="phone" placeholder="09xxxxxxxxx" required>
+                    </div>
+                    <label for="phone">شماره تماس</label>
+                </div>
+            </div>
+
+            <!-- Health Information Section -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-stethoscope"></i>
+                    اطلاعات پزشکی
+                </h3>
+
+                <div class="form-group">
+                    <label for="smoker" class="select-label">
+                        <i class="fas fa-smoking"></i>
+                        آیا سیگاری هستید؟
+                    </label>
+                    <div class="select-wrapper">
+                        <select id="smoker" name="smoker">
+                            <option value="">انتخاب کنید</option>
+                            <option value="yes">بله</option>
+                            <option value="no">خیر</option>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="diabetes" class="select-label">
+                        <i class="fas fa-apple-alt"></i>
+                        آیا دیابت دارید؟
+                    </label>
+                    <div class="select-wrapper">
+                        <select id="diabetes" name="diabetes">
+                            <option value="">انتخاب کنید</option>
+                            <option value="yes">بله</option>
+                            <option value="no">خیر</option>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Section -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-paper-plane"></i>
+                    تماس بیشتر
+                </h3>
+
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="fab fa-telegram"></i>
+                        <input type="text" id="chat-id" name="chatId" placeholder="شناسه تلگرام (اختیاری)">
+                    </div>
+                    <label for="chat-id">شناسه چت تلگرام</label>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" disabled title="سرور هنوز متصل نیست">
+                <i class="fas fa-check"></i>
+                ثبت اطلاعات
+            </button>
+
+            <button type="button" class="back-btn" id="back-btn" style="display: none;">
+                <i class="fas fa-arrow-left"></i>
+                بازگشت به ربات
+            </button>
+
+            <div class="submit-info">
+                ⚠️ برای شروع تست، دکمه "🚀 شروع تست محلی" را فشار دهید.
+            </div>
+        </form>
+
+        <div class="test-panel" style="display: none;">
+            <div class="test-header">
+                🧪 <strong>پنل تست توسعه‌دهندگان</strong>
+            </div>
+            <div class="test-content">
+                <p>شناسه تست: <code id="test-user-id">test_user_001</code></p>
+                <button type="button" class="test-btn" onclick="startTestMode()">
+                    🚀 شروع تست محلی
+                </button>
+                <button type="button" class="test-btn reset-btn" onclick="resetTestData()">
+                    🔄 حذف داده‌های تست
+                </button>
+            </div>
+        </div>
+
+        <div class="success-message" id="success-message">
+            <i class="fas fa-check-circle"></i>
+            <p>اطلاعات شما با موفقیت ثبت شد</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
