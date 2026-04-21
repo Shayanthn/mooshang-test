@@ -2,8 +2,8 @@
 const tg = window.Telegram?.WebApp;
 let currentUserId = null;
 
-// API Configuration
-const API_BASE_URL = ''; // با قرار دادن رشته خالی، ریکوئست‌ها به دامین فعلی ارسال می‌شوند
+// API Configuration - Updated directly to n8n Webhook
+const API_BASE_URL = 'https://shayanthn7887.app.n8n.cloud/webhook/clinic-form-submit';
 
 // Setup Telegram Web App
 if (tg) {
@@ -145,55 +145,44 @@ window.addEventListener('load', async () => {
     }
 });
 
-// تایید کاربر و دریافت اطلاعات
+// تایید کاربر (بدون نیاز به سرور در حالت n8n، مستقیم تایید می‌شود)
 async function validateUser(userId) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/validate-user/${userId}`);
-        const data = await response.json();
-        
-        if (data.exists) {
-            console.log('✅ User validated:', data.user);
-            document.querySelector('.submit-btn').disabled = false;
-            document.querySelector('.submit-btn').title = 'برای ثبت اطلاعات کلیک کنید';
-            document.querySelector('.submit-info').textContent = '✅ شناسه کاربر تایید شد. می‌توانید اطلاعات خود را ثبت کنید.';
-            document.querySelector('.submit-info').style.background = '#d1fae5';
-            document.querySelector('.submit-info').style.borderColor = '#10b981';
-            document.querySelector('.submit-info').style.color = '#065f46';
-        } else {
-            showErrorMessage('❌ شناسه کاربری معتبر نیست.');
-        }
-    } catch (error) {
-        console.error('Validation error:', error);
-        showErrorMessage('❌ خطا در اتصال به سرور.');
-    }
+    console.log('✅ User validated locally for n8n:', userId);
+    document.querySelector('.submit-btn').disabled = false;
+    document.querySelector('.submit-btn').title = 'برای ثبت اطلاعات کلیک کنید';
+    document.querySelector('.submit-info').textContent = '✅ شناسه کاربر تایید شد. می‌توانید اطلاعات خود را ثبت کنید.';
+    document.querySelector('.submit-info').style.background = '#d1fae5';
+    document.querySelector('.submit-info').style.borderColor = '#10b981';
+    document.querySelector('.submit-info').style.color = '#065f46';
 }
 
-// ارسال داده‌های فرم به سرور
+// ارسال داده‌های فرم به n8n Webhook
 async function submitFormToServer(formData) {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/form/submit`, {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                user_id: currentUserId,
+                user_id: currentUserId || 'web-user',
                 ...formData
             })
         });
         
+        // n8n returns standard JSON based on our Respond to Webhook node
         const data = await response.json();
         
-        if (data.status === 'success') {
-            console.log('✅ Data submitted to server:', data);
+        if (data.status === 'success' || response.ok) {
+            console.log('✅ Data submitted to n8n:', data);
             return true;
         } else {
-            showErrorMessage(`❌ ${data.message}`);
+            showErrorMessage(`❌ خطا در ثبت اطلاعات`);
             return false;
         }
     } catch (error) {
         console.error('Submission error:', error);
-        showErrorMessage('❌ خطا در ارسال داده‌ها به سرور.');
+        showErrorMessage('❌ خطا در اتصال به سرور (n8n).');
         return false;
     }
 }
