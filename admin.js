@@ -367,7 +367,7 @@ async function saveUserDetails(e) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                user_id: String(userId),
+                user_id: Number(userId),
                 appointment: appointment,
                 notes: notes
             })
