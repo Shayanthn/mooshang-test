@@ -367,7 +367,7 @@ async function saveUserDetails(e) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                user_id: userId,
+                user_id: Number(userId),
                 appointment: appointment,
                 notes: notes
             })
@@ -379,7 +379,7 @@ async function saveUserDetails(e) {
         if (response.ok || res.status === 'success') {
             showToast('اطلاعات با موفقیت بروزرسانی شد.');
             closeModal();
-            fetchUsers(false); // Reload data
+            fetchUsers(true); // reload dashboard exactly
         } else {
             showToast('خطا در بروزرسانی اطلاعات', 'error');
         }
