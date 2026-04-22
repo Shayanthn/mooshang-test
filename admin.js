@@ -60,6 +60,27 @@ function showSection(sectionId) {
 // Init
 document.addEventListener('DOMContentLoaded', () => {
     // Show login by default
+    
+    // Initialize Persian Datepicker for modal appointment field
+    if(typeof $ !== 'undefined') {
+        $('#modal-appointment').persianDatepicker({
+            format: 'YYYY/MM/DD ساعت HH:mm',
+            timePicker: {
+                enabled: true,
+                meridiem: {
+                    enabled: true
+                }
+            },
+            responsive: true,
+            toolbox: {
+                calendarSwitch: {
+                    enabled: false
+                }
+            },
+            initialValue: false, // Don't auto-fill on load so empty strings stay empty
+            autoClose: true
+        });
+    }
 });
 
 function refreshData() {
