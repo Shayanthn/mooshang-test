@@ -60,27 +60,6 @@ function showSection(sectionId) {
 // Init
 document.addEventListener('DOMContentLoaded', () => {
     // Show login by default
-    
-    // Initialize Persian Datepicker for modal appointment field
-    if(typeof $ !== 'undefined') {
-        $('#modal-appointment').persianDatepicker({
-            format: 'YYYY/MM/DD ساعت HH:mm',
-            timePicker: {
-                enabled: true,
-                meridiem: {
-                    enabled: true
-                }
-            },
-            responsive: true,
-            toolbox: {
-                calendarSwitch: {
-                    enabled: false
-                }
-            },
-            initialValue: false, // Don't auto-fill on load so empty strings stay empty
-            autoClose: true
-        });
-    }
 });
 
 function refreshData() {
@@ -348,6 +327,24 @@ function openUserModal(userId) {
 
     // Show modal
     document.getElementById('user-modal').classList.remove('hidden');
+    
+    // Initialize Datepicker AFTER modal is visible so it can calculate offsets
+    setTimeout(() => {
+        if(typeof $ !== 'undefined') {
+            $('#modal-appointment').persianDatepicker({
+                format: 'YYYY/MM/DD ساعت HH:mm',
+                timePicker: {
+                    enabled: true,
+                    meridiem: { enabled: true }
+                },
+                toolbox: { calendarSwitch: { enabled: false } },
+                initialValue: false, // Prevents overwriting what we just set via vanilla JS
+                autoClose: true
+            });
+            // Re-apply the value in case datepicker wiped it
+            document.getElementById('modal-appointment').value = user.appointment || '';
+        }
+    }, 100);
 }
 
 function closeModal() {
