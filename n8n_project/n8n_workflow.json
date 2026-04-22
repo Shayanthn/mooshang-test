@@ -394,12 +394,12 @@
           "mode": "name"
         },
         "columnToMatchOn": "Telegram_ID",
-        "valueToMatchOn": "={{$json.body.user_id}}",
+        "valueToMatchOn": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"user_id\"]}}",
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Appointment": "={{$json.body.appointment}}",
-            "Notes": "={{$json.body.notes}}"
+            "Appointment": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"appointment\"]}}",
+            "Notes": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"notes\"]}}"
           }
         },
         "options": {}
@@ -452,7 +452,7 @@
           "conditions": [
             {
               "id": "app-cond",
-              "leftValue": "={{$json.body.appointment}}",
+              "leftValue": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"appointment\"]}}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -607,7 +607,13 @@
             "node": "Update User in Sheet",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Update User in Sheet": {
+      "main": [
+        [
           {
             "node": "Respond Update User",
             "type": "main",
@@ -616,7 +622,7 @@
         ]
       ]
     },
-    "Update User in Sheet": {
+    "Respond Update User": {
       "main": [
         [
           {
