@@ -10,23 +10,22 @@ let isLoggedIn = false;
 // Login Logic
 function handleLogin(e) {
     e.preventDefault();
-    const user = document.getElementById('login-user').value;
     const pass = document.getElementById('login-pass').value;
     
     const btn = document.getElementById('login-btn');
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     btn.disabled = true;
 
-    // در اینجا برای سادگی ادمین گیت‌هاب پیج، لاگین لوکال چک میشه
-    // یوزرنیم دیفالت: admin | پسورد دیفالت: 1234
+    // در اینجا فقط پسورد چک می‌شود
+    // پسورد دیفالت: 1234
     setTimeout(() => {
-        if (user === 'admin' && pass === '1234') {
+        if (pass === '1234') {
             document.getElementById('login-modal').classList.add('hidden');
             isLoggedIn = true;
             showSection('dashboard');
             showToast('با موفقیت وارد شدید', 'success');
         } else {
-            showToast('نام کاربری یا رمز عبور اشتباه است', 'error');
+            showToast('رمز عبور اشتباه است', 'error');
             btn.innerHTML = 'ورود به سیستم';
             btn.disabled = false;
         }
