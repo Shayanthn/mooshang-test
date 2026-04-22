@@ -19,7 +19,7 @@ function handleLogin(e) {
     // در اینجا فقط پسورد چک می‌شود
     // پسورد دیفالت: 1234
     setTimeout(() => {
-        if (pass === '1234') {
+        if (pass === 'Amoo@shayan') {
             document.getElementById('login-modal').classList.add('hidden');
             isLoggedIn = true;
             showSection('dashboard');
@@ -363,14 +363,13 @@ async function saveUserDetails(e) {
 
     try {
         // Send to Webhook
-        const response = await fetch(`${API_URL}/api/admin/users/update`, {
+        const response = await fetch(`${N8N_WEBHOOK_BASE}/admin-update-user`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 user_id: userId,
                 appointment: appointment,
-                notes: notes,
-                action: 'update_notes'
+                notes: notes
             })
         });
         
