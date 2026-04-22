@@ -1,0 +1,647 @@
+{
+  "name": "Clinic Automation Bot (n8n)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        496
+      ],
+      "webhookId": "telebot-uuid-placeholder",
+      "id": "d8614773-293d-4dcd-b3b6-6b08ebc916ab",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.message.text}}",
+              "value2": "/start"
+            }
+          ]
+        }
+      },
+      "name": "IF /start",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        496
+      ],
+      "id": "2499187f-b5b4-4b43-b145-cf2a6c4fc822"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1sNVq2q3S7YnNj3T6aj8RJcP8285DIVbC7JJ8ihmAxZ0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Telegram_ID",
+              "lookupValue": "={{$node[\"Telegram Trigger\"].json[\"message\"][\"from\"][\"id\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        480
+      ],
+      "id": "77e98837-dfb5-4a7c-8aac-c52550a292d4",
+      "name": "Get row(s) in sheet",
+      "settings": {
+        "alwaysOutputData": true
+      },
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZtQp7yZ6orrx1U2F",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dd28b3e5-075c-43d3-b3ba-a461f2b3c754",
+              "leftValue": "={{ $json.Telegram_ID || \"\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        320,
+        480
+      ],
+      "id": "0458f4b1-482c-43a7-bdc4-529f711a96ae",
+      "name": "Check Duplicate"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"] }}",
+        "text": "={{ $json.Name }} عزیز، اطلاعات شما قبلاً در سیستم ثبت شده است. در صورت نیاز به تغییر، با پشتیبانی تماس بگیرید.",
+        "additionalFields": {}
+      },
+      "name": "Already Registered",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        560,
+        336
+      ],
+      "id": "5b385d17-df1f-49b4-a64f-322fa5e9297b",
+      "webhookId": "57ff1101-a03e-4c0d-bfd5-85ba173ec225",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"] }}",
+        "text": "سلام! 👋 خوش‌آمدید به مرکز بررسی اطلاعات.\n\nبرای ثبت اطلاعات کلینیکی خود، لطفاً روی فرم زیر کلیک کنید.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📝 ورود به فرم ثبت اطلاعات",
+                    "additionalFields": {
+                      "web_app": {
+                        "url": "=https://shayanthn.github.io/clinic_assistance/index.html?user_id={{ $node[\"Telegram Trigger\"].json[\"message\"][\"from\"][\"id\"] }}"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Send Welcome & WebApp",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        560,
+        544
+      ],
+      "id": "0abf4a32-5205-46b6-a96f-464a8f0fe55e",
+      "webhookId": "cd5d9d03-483e-4bfd-852c-09254668eea3",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clinic-form-submit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (Receive Form)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        848
+      ],
+      "webhookId": "clinic-webhook-uuid",
+      "id": "5f0d3d15-8019-4caa-bd65-b3aa0efb9c84"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Respond to Frontend",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        704
+      ],
+      "id": "e12ceab0-3c23-4f15-a975-4e2b9f0074fc"
+    },
+    {
+      "parameters": {
+        "chatId": "191750790",
+        "text": "=🚨 فرم جدید در کلینیک ثبت شد!\n\n👤 نام: {{$json[\"body\"][\"firstName\"]}} {{$json[\"body\"][\"lastName\"]}}\n📞 شماره تماس: {{$json[\"body\"][\"phone\"]}}\n🚬 سیگاری: {{$json[\"body\"][\"smoker\"]}}\n🩸 دیابت: {{$json[\"body\"][\"diabetes\"]}}\n🆔 ایدی تلگرام: {{$json[\"body\"][\"user_id\"]}}",
+        "additionalFields": {}
+      },
+      "name": "Notify Admin (Secretary)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        848
+      ],
+      "id": "77134d65-7b21-4aed-8508-d78ee43f75b9",
+      "webhookId": "ef31d800-600b-4be2-8e3b-88f71d927719",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1sNVq2q3S7YnNj3T6aj8RJcP8285DIVbC7JJ8ihmAxZ0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Telegram_ID": "={{$json.body.user_id}}",
+            "Name": "={{$json.body.firstName}}",
+            "Last_name": "={{$json.body.lastName}}",
+            "Phone": "={{$json.body.phone}}",
+            "Smoker": "={{$json.body.smoker}}",
+            "Diabetes": "={{$json.body.diabetes}}",
+            "Date": "={{new Date().toLocaleString('fa-IR')}}"
+          }
+        },
+        "options": {}
+      },
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -96,
+        1008
+      ],
+      "id": "8b4a0a85-08af-411c-b098-095182c45481",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZtQp7yZ6orrx1U2F",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "admin-get-users",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (Get Users)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1sNVq2q3S7YnNj3T6aj8RJcP8285DIVbC7JJ8ihmAxZ0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "name": "Get All Users",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        420,
+        -100
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZtQp7yZ6orrx1U2F",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const users = $input.all().map(item => {\n  return {\n    user_id: item.json.Telegram_ID,\n    first_name: item.json.Name,\n    last_name: item.json.Last_name || item.json.Last_Name,\n    phone: item.json.Phone,\n    smoker: item.json.Smoker,\n    diabetes: item.json.Diabetes,\n    created_at: item.json.Date,\n    appointment: item.json.Appointment || \"\",\n    notes: item.json.Notes || \"\"\n  };\n});\n\nreturn [\n  {\n    json: {\n      status: \"success\",\n      data: users\n    }\n  }\n];"
+      },
+      "name": "Format Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseBody": "={{$json}}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Respond Get Users",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "admin-update-user",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (Update User)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1sNVq2q3S7YnNj3T6aj8RJcP8285DIVbC7JJ8ihmAxZ0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columnToMatchOn": "Telegram_ID",
+        "valueToMatchOn": "={{$json.body.user_id}}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Appointment": "={{$json.body.appointment}}",
+            "Notes": "={{$json.body.notes}}"
+          }
+        },
+        "options": {}
+      },
+      "name": "Update User in Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        420,
+        200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZtQp7yZ6orrx1U2F",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseBody": "{\n  \"status\": \"success\"\n}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Respond Update User",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        560,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "app-cond",
+              "leftValue": "={{$json.body.appointment}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Has Appointment?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"user_id\"]}}",
+        "text": "🗓 بیمار عزیز، پیام جدید از طرف کلینیک:\n\n✅ وقت کاشت شما تنظیم شد!\n⏰ تاریخ و زمان: {{$node[\"Webhook (Update User)\"].json[\"body\"][\"appointment\"]}}\n\nلطفا در زمان تعیین شده در کلینیک حضور داشته باشید.",
+        "additionalFields": {}
+      },
+      "name": "Notify User (Telegram)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        880,
+        180
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF /start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF /start": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Already Registered",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Welcome & WebApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (Receive Form)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Frontend",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Admin (Secretary)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (Get Users)": {
+      "main": [
+        [
+          {
+            "node": "Get All Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Users": {
+      "main": [
+        [
+          {
+            "node": "Format Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Data": {
+      "main": [
+        [
+          {
+            "node": "Respond Get Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (Update User)": {
+      "main": [
+        [
+          {
+            "node": "Update User in Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond Update User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update User in Sheet": {
+      "main": [
+        [
+          {
+            "node": "Has Appointment?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Appointment?": {
+      "main": [
+        [
+          {
+            "node": "Notify User (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e93d86b1ae5451c1dab770801f96ad069a24ac55ced39b4412370482f97ecdbe"
+  }
+}

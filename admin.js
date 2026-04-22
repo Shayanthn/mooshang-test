@@ -1,10 +1,42 @@
 // admin.js
 
-const API_URL = ''; // Same local domain
+// === آدرس وب‌هوک‌های n8n شما باید اینجا قرار گیرد ===
+const N8N_WEBHOOK_BASE = 'https://shayanthn7887.app.n8n.cloud/webhook'; 
+// ====================================================
+
 let allUsersData = {};
+let isLoggedIn = false;
+
+// Login Logic
+function handleLogin(e) {
+    e.preventDefault();
+    const user = document.getElementById('login-user').value;
+    const pass = document.getElementById('login-pass').value;
+    
+    const btn = document.getElementById('login-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
+    // در اینجا برای سادگی ادمین گیت‌هاب پیج، لاگین لوکال چک میشه
+    // یوزرنیم دیفالت: admin | پسورد دیفالت: 1234
+    setTimeout(() => {
+        if (user === 'admin' && pass === '1234') {
+            document.getElementById('login-modal').classList.add('hidden');
+            isLoggedIn = true;
+            showSection('dashboard');
+            showToast('با موفقیت وارد شدید', 'success');
+        } else {
+            showToast('نام کاربری یا رمز عبور اشتباه است', 'error');
+            btn.innerHTML = 'ورود به سیستم';
+            btn.disabled = false;
+        }
+    }, 800);
+}
 
 // Navigation UI Controller
 function showSection(sectionId) {
+    if (!isLoggedIn) return;
+
     // Hide all sections
     ['dashboard', 'users', 'add-user'].forEach(id => {
         document.getElementById(`section-${id}`).classList.remove('block');
@@ -20,53 +52,49 @@ function showSection(sectionId) {
 
     // Fetch new data if needed
     if (sectionId === 'dashboard') {
-        fetchDashboardStats();
-        fetchUsers(true); // Partial load for recent users
+        fetchUsers(true); 
     } else if (sectionId === 'users') {
         fetchUsers();
     }
 }
 
-// Init Dashboard
+// Init
 document.addEventListener('DOMContentLoaded', () => {
-    showSection('dashboard');
+    // Show login by default
 });
 
 function refreshData() {
     showToast('در حال بروزرسانی اطلاعات...', 'info');
-    fetchDashboardStats();
     fetchUsers(false);
 }
 
-// Fetch Stats
-async function fetchDashboardStats() {
-    try {
-        const response = await fetch(`${API_URL}/api/admin/stats`);
-        const json = await response.json();
-        
-        if (json.status === 'success') {
-            document.getElementById('stat-total').innerText = json.data.totalUsers;
-            document.getElementById('stat-completed').innerText = json.data.completedForms;
-            document.getElementById('stat-diabetic').innerText = json.data.diabetics;
-            document.getElementById('stat-smoker').innerText = json.data.smokers;
-        }
-    } catch (e) {
-        console.error("Failed fetching stats", e);
-    }
+// محاسبه آمار بر اساس اطلاعات موجود
+function calculateDashboardStats(usersArray) {
+    const totalUsers = usersArray.length;
+    const completedForms = usersArray.filter(u => u.first_name && u.phone).length;
+    const diabetics = usersArray.filter(u => u.diabetes === 'yes').length;
+    const smokers = usersArray.filter(u => u.smoker === 'yes').length;
+
+    document.getElementById('stat-total').innerText = totalUsers;
+    document.getElementById('stat-completed').innerText = completedForms;
+    document.getElementById('stat-diabetic').innerText = diabetics;
+    document.getElementById('stat-smoker').innerText = smokers;
 }
 
-// Fetch Users List
+// Fetch Users List از n8n
 async function fetchUsers(isRecentOnly = false) {
     try {
-        const response = await fetch(`${API_URL}/api/admin/users`);
+        const response = await fetch(`${N8N_WEBHOOK_BASE}/admin-get-users`);
         const json = await response.json();
         
         if (json.status === 'success') {
             allUsersData = json.data;
+            calculateDashboardStats(json.data);
             populateTables(json.data, isRecentOnly);
         }
     } catch (e) {
         console.error("Failed fetching users", e);
+        showToast('ارتباط با سرور برقرار نشد.', 'error');
     }
 }
 
@@ -139,6 +167,9 @@ function populateTables(usersObj, isRecentOnly) {
                     <td class="px-6 py-4 text-xs">${getHealthBadges(u.smoker, u.diabetes)}</td>
                     <td class="px-6 py-4 text-gray-500 text-xs">${dateStr}</td>
                     <td class="px-6 py-4 flex gap-2">
+                        <button onclick="openUserModal('${u.user_id}')" class="text-indigo-500 hover:text-indigo-700 text-sm p-1 focus:outline-none ml-2" title="مشاهده و ویرایش">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <button onclick="deleteUser('${u.user_id}')" class="text-red-500 hover:text-red-700 text-sm p-1 focus:outline-none" title="حذف بیمار">
                             <i class="fas fa-trash-alt"></i>
                         </button>
@@ -265,4 +296,82 @@ function filterTable() {
             row.style.display = "none";
         }
     });
+}
+
+// ---- Modal / Popup Logic ---- //
+function openUserModal(userId) {
+    const userArray = Object.values(allUsersData);
+    const user = userArray.find(u => String(u.user_id) === String(userId));
+    if (!user) return;
+
+    // Populate Data
+    document.getElementById('modal-user-id').value = user.user_id;
+    document.getElementById('modal-user-name').innerText = `${user.first_name || ''} ${user.last_name || 'بدون نام'}`;
+    
+    const phoneElement = document.getElementById('modal-user-phone');
+    if (user.phone) {
+        phoneElement.innerText = user.phone;
+        phoneElement.classList.replace('text-red-400', 'text-gray-800');
+        document.getElementById('modal-call-btn').href = `tel:${user.phone}`;
+        document.getElementById('modal-call-btn').classList.remove('hidden');
+    } else {
+        phoneElement.innerText = 'ثبت نشده';
+        phoneElement.classList.replace('text-gray-800', 'text-red-400');
+        document.getElementById('modal-call-btn').classList.add('hidden');
+    }
+
+    document.getElementById('modal-user-smoker').innerText = user.smoker === 'yes' ? 'سیگاری (بله)' : 'غیرسیگاری (خیر)';
+    document.getElementById('modal-user-diabetes').innerText = user.diabetes === 'yes' ? 'دارد (بله)' : 'ندارد (خیر)';
+    
+    document.getElementById('modal-appointment').value = user.appointment || '';
+    document.getElementById('modal-notes').value = user.notes || '';
+
+    // Show modal
+    document.getElementById('user-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('user-modal').classList.add('hidden');
+}
+
+async function saveUserDetails(e) {
+    e.preventDefault();
+    const btn = document.getElementById('modal-save-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> در حال ذخیره...';
+    btn.disabled = true;
+
+    const userId = document.getElementById('modal-user-id').value;
+    const appointment = document.getElementById('modal-appointment').value;
+    const notes = document.getElementById('modal-notes').value;
+
+    try {
+        // Send to Webhook
+        const response = await fetch(`${API_URL}/api/admin/users/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: userId,
+                appointment: appointment,
+                notes: notes,
+                action: 'update_notes'
+            })
+        });
+        
+        let res = {};
+        try { res = await response.json(); } catch(e) {}
+        
+        if (response.ok || res.status === 'success') {
+            showToast('اطلاعات با موفقیت بروزرسانی شد.');
+            closeModal();
+            fetchUsers(false); // Reload data
+        } else {
+            showToast('خطا در بروزرسانی اطلاعات', 'error');
+        }
+    } catch (error) {
+        showToast('خطای ارتباط با سرور', 'error');
+        console.error(error);
+    } finally {
+        btn.innerHTML = '<i class="fas fa-check ml-2"></i> ذخیره تغییرات';
+        btn.disabled = false;
+    }
 }
