@@ -1,7 +1,7 @@
 // admin.js
 
 // === آدرس وب‌هوک‌های n8n شما باید اینجا قرار گیرد ===
-const N8N_WEBHOOK_BASE = 'https://shayanthn7887.app.n8n.cloud/webhook'; 
+const N8N_WEBHOOK_BASE = 'https://mooshang.app.n8n.cloud/webhook'; 
 // ====================================================
 
 let allUsersData = {};

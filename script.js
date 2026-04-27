@@ -3,7 +3,7 @@ const tg = window.Telegram?.WebApp;
 let currentUserId = null;
 
 // API Configuration - Updated directly to n8n Webhook
-const API_BASE_URL = 'https://shayanthn7887.app.n8n.cloud/webhook/clinic-form-submit';
+const API_BASE_URL = 'https://mooshang.app.n8n.cloud/webhook/clinic-form-submit';
 
 // Setup Telegram Web App
 if (tg) {
