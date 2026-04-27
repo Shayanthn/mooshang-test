@@ -60,7 +60,7 @@
           "values": [
             {
               "lookupColumn": "Telegram_ID",
-              "lookupValue": "={{$node[\"Telegram Trigger\"].json[\"message\"][\"from\"][\"id\"]}}"
+              "lookupValue": "={{ String($node[\"Telegram Trigger\"].json[\"message\"][\"from\"][\"id\"]) }}"
             }
           ]
         },
@@ -155,7 +155,7 @@
                     "text": "📝 ورود به فرم ثبت اطلاعات",
                     "additionalFields": {
                       "web_app": {
-                        "url": "=https://shayanthn.github.io/clinic_assistance/index.html?user_id={{ $json.message.from.id }}"
+                        "url": "=https://shayanthn.github.io/clinic_assistance/index.html?user_id={{ $('Telegram Trigger').first().json.message.from.id }}"
                       }
                     }
                   }
@@ -262,16 +262,18 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Telegram_ID": "={{$json.body.user_id}}",
+            "Telegram_ID": "={{ String($json.body.user_id) }}",
             "Name": "={{$json.body.firstName}}",
             "Last_name": "={{$json.body.lastName}}",
-            "Phone": "={{$json.body.phone}}",
+            "Phone": "={{ String($json.body.phone) }}",
             "Smoker": "={{$json.body.smoker}}",
             "Diabetes": "={{$json.body.diabetes}}",
             "Date": "={{new Date().toLocaleString('fa-IR')}}"
           }
         },
-        "options": {}
+        "options": {
+          "cellFormat": "USER_ENTERED"
+        }
       },
       "name": "Save to Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
