@@ -125,7 +125,7 @@ function populateTables(usersObj, isRecentOnly) {
                             </div>
                             <div>
                                 <div class="font-medium text-gray-800">${u.first_name || 'تلگرام'} ${u.last_name || 'کاربر'}</div>
-                                <div class="text-xs text-gray-400">ID: ${u.user_id ? u.user_id.substring(0,6) : '-'}</div>
+                                <div class="text-xs text-gray-400">ID: ${u.user_id ? String(u.user_id).substring(0,6) : '-'}</div>
                             </div>
                         </div>
                     </td>
