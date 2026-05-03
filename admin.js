@@ -68,7 +68,8 @@ function refreshData() {
 }
 
 // محاسبه آمار بر اساس اطلاعات موجود
-function calculateDashboardStats(usersArray) {
+function calculateDashboardStats(usersData) {
+    const usersArray = Array.isArray(usersData) ? usersData : Object.values(usersData || {});
     const totalUsers = usersArray.length;
     const completedForms = usersArray.filter(u => u.first_name && u.phone).length;
     const diabetics = usersArray.filter(u => u.diabetes === 'yes').length;
