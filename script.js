@@ -32,9 +32,14 @@ async function startTestMode() {
         user_id: testUserId,
         firstName: 'محمد',
         lastName: 'رضایی',
+        nationalId: '1234567890',
         phone: '09151234567',
+        address: 'تهران، خیابان ولیعصر',
         smoker: 'no',
-        diabetes: 'no'
+        alcohol: 'no',
+        drugs: 'no',
+        diabetes: 'no',
+        medications: 'خیر'
     };
     
     console.log('📤 Sending test data...');
@@ -55,10 +60,14 @@ async function startTestMode() {
             // فرم را پر کنید
             document.getElementById('first-name').value = testData.firstName;
             document.getElementById('last-name').value = testData.lastName;
+            document.getElementById('national-id').value = testData.nationalId;
             document.getElementById('phone').value = testData.phone;
+            document.getElementById('address').value = testData.address;
             document.getElementById('smoker').value = testData.smoker;
+            document.getElementById('alcohol').value = testData.alcohol;
+            document.getElementById('drugs').value = testData.drugs;
             document.getElementById('diabetes').value = testData.diabetes;
-            document.getElementById('chat-id').value = testUserId;
+            document.getElementById('medications').value = testData.medications;
             
             // فعال کردن دکمه
             document.querySelector('.submit-btn').disabled = false;
@@ -85,7 +94,6 @@ async function resetTestData() {
         
         // فرم را خالی کنید
         document.getElementById('clinic-form').reset();
-        document.getElementById('chat-id').value = '';
         
         // دکمه را غیرفعال کنید
         document.querySelector('.submit-btn').disabled = true;
@@ -208,9 +216,14 @@ document.getElementById('clinic-form').addEventListener('submit', async function
     const formData = {
         firstName: document.getElementById('first-name').value.trim(),
         lastName: document.getElementById('last-name').value.trim(),
+        nationalId: document.getElementById('national-id').value.trim(),
         phone: document.getElementById('phone').value.trim(),
+        address: document.getElementById('address').value.trim(),
         smoker: document.getElementById('smoker').value,
+        alcohol: document.getElementById('alcohol').value,
+        drugs: document.getElementById('drugs').value,
         diabetes: document.getElementById('diabetes').value,
+        medications: document.getElementById('medications').value.trim(),
         timestamp: new Date().toISOString(),
         source: 'telegram_web_app'
     };
@@ -222,52 +235,16 @@ document.getElementById('clinic-form').addEventListener('submit', async function
         // Show success message
         showSuccessMessage();
 
-        // 1. تغییر دکمه در رابط کاربری
-        document.querySelector('.submit-btn').style.display = 'none';
-        const backBtn = document.getElementById('back-btn');
-        backBtn.style.display = 'flex';
-        document.querySelector('.submit-info').textContent = '✅ اطلاعات شما با موفقیت ثبت شد!';
-
-        // 2. ارسال پیام موفقیت‌آمیز به ربات و بستن مینی‌اپ
-        if (tg) {
-            // ساخت یک پیام از خلاصه اطلاعات برای ربات
-            const successSummary = {
-                action: "form_submitted",
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                phone: formData.phone
-            };
-            
-            setTimeout(() => {
-                tg.sendData(JSON.stringify(successSummary));
-            }, 1000);
-        }
-        
-        console.log('✅ Data submitted:', formData);
-    }
-});
-
-// مدیریت دکمه بازگشت دستی
-document.getElementById('back-btn').addEventListener('click', function() {
-    if (tg) {
-        tg.close();
-    }
-});
-
-// دکمه بازگشت
-document.addEventListener('DOMContentLoaded', function() {
-    const backBtn = document.getElementById('back-btn');
-    if (backBtn) {
-        backBtn.addEventListener('click', function() {
-            // بازگشت به ربات
+        // بستن مینی اپلیکیشن تلگرام بعد از 1 ثانیه
+        setTimeout(() => {
             if (tg && tg.close) {
                 tg.close();
             } else {
-                // اگر تلگرام نیست، پیام نشان دهید
-                alert('✅ اطلاعات شما دریافت شد!\n\nبه ربات بازگردید.');
-                location.href = 'index.html';
+                alert('✅ اطلاعات شما با موفقیت ثبت شد!');
             }
-        });
+        }, 1500);
+        
+        console.log('✅ Data submitted:', formData);
     }
 });
 
@@ -275,9 +252,10 @@ document.addEventListener('DOMContentLoaded', function() {
 function validateForm() {
     const firstName = document.getElementById('first-name').value.trim();
     const lastName = document.getElementById('last-name').value.trim();
+    const nationalId = document.getElementById('national-id').value.trim();
     const phone = document.getElementById('phone').value.trim();
 
-    if (!firstName || !lastName || !phone) {
+    if (!firstName || !lastName || !nationalId || !phone) {
         return false;
     }
 
@@ -285,6 +263,13 @@ function validateForm() {
     if (!/^[\d\s\-\+()]{10,}$/.test(phone)) {
         showErrorMessage('❌ شماره تماس معتبر نیست');
         return false;
+    }
+    
+    // Validate national ID (basic 10 digits check)
+    if (!/^\d{10}$/.test(nationalId)) {
+        showErrorMessage('❌ کد ملی باید ۱۰ رقم باشد');
+        return false;
+    }
     }
 
     return true;
