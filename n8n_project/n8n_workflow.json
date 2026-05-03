@@ -97,7 +97,7 @@
           "conditions": [
             {
               "id": "dd28b3e5-075c-43d3-b3ba-a461f2b3c754",
-              "leftValue": "={{ $json.Telegram_ID || \"\" }}",
+              "leftValue": "={{ String($json.Telegram_ID || \"\") }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -121,7 +121,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"] }}",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
         "text": "={{ $json.Name }} عزیز، اطلاعات شما قبلاً در سیستم ثبت شده است. در صورت نیاز به تغییر، با پشتیبانی تماس بگیرید.",
         "additionalFields": {}
       },
