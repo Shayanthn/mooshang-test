@@ -72,8 +72,8 @@ function calculateDashboardStats(usersData) {
     const usersArray = Array.isArray(usersData) ? usersData : Object.values(usersData || {});
     const totalUsers = usersArray.length;
     const completedForms = usersArray.filter(u => u.first_name && u.phone).length;
-    const diabetics = usersArray.filter(u => u.diabetes === 'yes').length;
-    const smokers = usersArray.filter(u => u.smoker === 'yes').length;
+    const diabetics = usersArray.filter(u => u.diabetes === 'yes' || u.diabetes === 'بلی').length;
+    const smokers = usersArray.filter(u => u.smoker === 'yes' || u.smoker === 'بلی').length;
 
     document.getElementById('stat-total').innerText = totalUsers;
     document.getElementById('stat-completed').innerText = completedForms;
@@ -184,15 +184,19 @@ function populateTables(usersObj, isRecentOnly) {
 function getHealthBadges(smoker, diabetes) {
     let badges = '';
     
-    if (smoker === 'yes') {
+    // Normalize both 'yes' (API) and 'بلی' (Persian manual)
+    const IS_YES = (v) => v === 'yes' || v === 'بلی';
+    const IS_NO = (v) => v === 'no' || v === 'خیر';
+
+    if (IS_YES(smoker)) {
         badges += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 ml-1 mb-1">سیگاری</span>`;
-    } else if (smoker === 'no') {
+    } else if (IS_NO(smoker)) {
         badges += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-1 mb-1">غیرسیگاری</span>`;
     }
     
-    if (diabetes === 'yes') {
+    if (IS_YES(diabetes)) {
         badges += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 ml-1 mb-1">دیابت</span>`;
-    } else if (diabetes === 'no') {
+    } else if (IS_NO(diabetes)) {
         badges += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-1 mb-1">بدون دیابت</span>`;
     }
     
@@ -214,10 +218,11 @@ async function submitNewUser(e) {
         phone: document.getElementById('add-phone').value,
         smoker: document.getElementById('add-smoker').value,
         diabetes: document.getElementById('add-diabetes').value,
+        user_id: "MANUAL_" + Date.now() // Generating a manual ID for n8n to process
     };
 
     try {
-        const response = await fetch(`${API_URL}/api/admin/users`, {
+        const response = await fetch(`${N8N_WEBHOOK_BASE}/clinic-form-submit`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(reqData)
