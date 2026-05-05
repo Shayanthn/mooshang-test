@@ -117,6 +117,12 @@ function populateTables(usersObj, isRecentOnly) {
 
             recent.forEach(u => {
                 const tr = document.createElement('tr');
+                
+                let highRiskAlert = '';
+                if (parseInt(u.age) >= 65 || (u.surgeries && u.surgeries.toLowerCase() !== 'خیر' && u.surgeries !== 'no')) {
+                    highRiskAlert = '<span class="text-red-500 ml-1"><i class="fas fa-exclamation-triangle"></i></span>';
+                }
+
                 tr.innerHTML = `
                     <td class="px-6 py-4">
                         <div class="flex items-center">
@@ -124,7 +130,7 @@ function populateTables(usersObj, isRecentOnly) {
                                 ${u.first_name ? u.first_name.charAt(0) : '<i class="fas fa-user"></i>'}
                             </div>
                             <div>
-                                <div class="font-medium text-gray-800">${u.first_name || 'تلگرام'} ${u.last_name || 'کاربر'}</div>
+                                <div class="font-medium text-gray-800">${highRiskAlert}${u.first_name || 'تلگرام'} ${u.last_name || 'کاربر'}</div>
                                 <div class="text-xs text-gray-400">ID: ${u.user_id ? String(u.user_id).substring(0,6) : '-'}</div>
                             </div>
                         </div>
@@ -159,10 +165,15 @@ function populateTables(usersObj, isRecentOnly) {
                 
                 let date = u.created_at ? new Date(u.created_at) : new Date();
                 let dateStr = isNaN(date.getTime()) ? '-' : date.toLocaleDateString('fa-IR');
+                
+                let highRiskAlert = '';
+                if (parseInt(u.age) >= 65 || (u.surgeries && u.surgeries.toLowerCase() !== 'خیر' && u.surgeries !== 'no')) {
+                    highRiskAlert = '<span class="text-red-500 ml-1" title="نیاز به تایید پزشک (سن بالا یا سابقه بیماری)"><i class="fas fa-exclamation-triangle"></i></span>';
+                }
 
                 tr.innerHTML = `
                     <td class="px-6 py-4 text-xs font-mono text-indigo-600">${u.user_id || '-'}</td>
-                    <td class="px-6 py-4 font-medium text-gray-800">${u.first_name || ''} ${u.last_name || 'بدون نام'}</td>
+                    <td class="px-6 py-4 font-medium text-gray-800">${highRiskAlert}${u.first_name || ''} ${u.last_name || 'بدون نام'} <span class="text-xs text-gray-400">(${u.age ? u.age + ' سال' : '?'})</span></td>
                     <td class="px-6 py-4 font-medium text-gray-600">${u.phone || '-'}</td>
                     <td class="px-6 py-4 text-xs">${getHealthBadges(u.smoker, u.diabetes)}</td>
                     <td class="px-6 py-4 text-gray-500 text-xs">${dateStr}</td>
@@ -215,9 +226,12 @@ async function submitNewUser(e) {
     const reqData = {
         firstName: document.getElementById('add-fname').value,
         lastName: document.getElementById('add-lname').value,
+        age: parseInt(document.getElementById('add-age').value) || 0,
         phone: document.getElementById('add-phone').value,
         smoker: document.getElementById('add-smoker').value,
         diabetes: document.getElementById('add-diabetes').value,
+        allergies: document.getElementById('add-allergies').value,
+        surgeries: document.getElementById('add-surgeries').value,
         user_id: "MANUAL_" + Date.now() // Generating a manual ID for n8n to process
     };
 
@@ -327,6 +341,9 @@ function openUserModal(userId) {
 
     document.getElementById('modal-user-smoker').innerText = user.smoker === 'yes' ? 'سیگاری (بله)' : 'غیرسیگاری (خیر)';
     document.getElementById('modal-user-diabetes').innerText = user.diabetes === 'yes' ? 'دارد (بله)' : 'ندارد (خیر)';
+    document.getElementById('modal-user-age').innerText = user.age ? user.age : 'نامشخص';
+    document.getElementById('modal-user-allergies').innerText = user.allergies ? user.allergies : 'نامشخص';
+    document.getElementById('modal-user-surgeries').innerText = user.surgeries ? user.surgeries : 'نامشخص';
     
     document.getElementById('modal-appointment').value = user.appointment || '';
     document.getElementById('modal-notes').value = user.notes || '';

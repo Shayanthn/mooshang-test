@@ -34,13 +34,16 @@ async function startTestMode() {
         firstName: 'محمد',
         lastName: 'رضایی',
         nationalId: '1234567890',
+        age: 66,
         phone: '09151234567',
         address: 'تهران، خیابان ولیعصر',
         smoker: 'no',
         alcohol: 'no',
         drugs: 'no',
         diabetes: 'no',
-        medications: 'خیر'
+        medications: 'خیر',
+        allergies: 'پنی سیلین',
+        surgeries: 'عمل قلب باز'
     };
     
     console.log('📤 Sending test data...');
@@ -62,6 +65,7 @@ async function startTestMode() {
             document.getElementById('first-name').value = testData.firstName;
             document.getElementById('last-name').value = testData.lastName;
             document.getElementById('national-id').value = testData.nationalId;
+            document.getElementById('age').value = testData.age;
             document.getElementById('phone').value = testData.phone;
             document.getElementById('address').value = testData.address;
             document.getElementById('smoker').value = testData.smoker;
@@ -69,6 +73,8 @@ async function startTestMode() {
             document.getElementById('drugs').value = testData.drugs;
             document.getElementById('diabetes').value = testData.diabetes;
             document.getElementById('medications').value = testData.medications;
+            document.getElementById('allergies').value = testData.allergies;
+            document.getElementById('surgeries').value = testData.surgeries;
             
             // فعال کردن دکمه
             document.querySelector('.submit-btn').disabled = false;
@@ -218,6 +224,7 @@ document.getElementById('clinic-form').addEventListener('submit', async function
         firstName: document.getElementById('first-name').value.trim(),
         lastName: document.getElementById('last-name').value.trim(),
         nationalId: document.getElementById('national-id').value.trim(),
+        age: parseInt(document.getElementById('age').value.trim()) || 0,
         phone: document.getElementById('phone').value.trim(),
         address: document.getElementById('address').value.trim(),
         smoker: document.getElementById('smoker').value,
@@ -225,6 +232,8 @@ document.getElementById('clinic-form').addEventListener('submit', async function
         drugs: document.getElementById('drugs').value,
         diabetes: document.getElementById('diabetes').value,
         medications: document.getElementById('medications').value.trim(),
+        allergies: document.getElementById('allergies').value.trim(),
+        surgeries: document.getElementById('surgeries').value.trim(),
         timestamp: new Date().toISOString(),
         source: 'telegram_web_app'
     };
@@ -254,9 +263,10 @@ function validateForm() {
     const firstName = document.getElementById('first-name').value.trim();
     const lastName = document.getElementById('last-name').value.trim();
     const nationalId = document.getElementById('national-id').value.trim();
+    const age = document.getElementById('age').value.trim();
     const phone = document.getElementById('phone').value.trim();
 
-    if (!firstName || !lastName || !nationalId || !phone) {
+    if (!firstName || !lastName || !nationalId || !phone || !age) {
         return false;
     }
 
@@ -271,6 +281,11 @@ function validateForm() {
         showErrorMessage('❌ کد ملی باید ۱۰ رقم باشد');
         return false;
     }
+    
+    // Validate age
+    if (parseInt(age) < 15 || parseInt(age) > 100) {
+        showErrorMessage('❌ سن وارد شده معتبر نیست');
+        return false;
     }
 
     return true;
