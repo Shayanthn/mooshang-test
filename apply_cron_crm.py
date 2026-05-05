@@ -1,0 +1,220 @@
+import json
+import uuid
+
+path = "n8n_project/n8n_workflow.json"
+with open(path, "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+nodes = data.get("nodes", [])
+connections = data.get("connections", {})
+
+# Check if cron-daily-reminder already exists to avoid duplicates
+if any(n.get("name") == "cron-daily-reminder" for n in nodes):
+    print("Already exists")
+else:
+    # UUIDs
+    cron_id = str(uuid.uuid4())
+    gs_id = str(uuid.uuid4())
+    code_id = str(uuid.uuid4())
+    switch_id = str(uuid.uuid4())
+    send20_id = str(uuid.uuid4())
+    send2_id = str(uuid.uuid4())
+    send1_id = str(uuid.uuid4())
+    send0_id = str(uuid.uuid4())
+
+    cron_node = {
+        "parameters": {
+            "rule": {
+                "interval": [
+                    {
+                        "field": "cronExpression",
+                        "expression": "0 8 * * *"
+                    }
+                ]
+            }
+        },
+        "name": "cron-daily-reminder",
+        "type": "n8n-nodes-base.cron",
+        "typeVersion": 1,
+        "position": [-800, -300],
+        "id": cron_id
+    }
+
+    gs_node = {
+        "parameters": {
+            "documentId": {
+                "__rl": True,
+                "value": "1URPPHyppxT8mDRYG8e93KK5nEMpcF7pNWY2KkG_pmEw",
+                "mode": "id"
+            },
+            "sheetName": {
+                "__rl": True,
+                "value": "Sheet1",
+                "mode": "name"
+            },
+            "options": {}
+        },
+        "name": "gs-getall-reminder",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [-600, -300],
+        "id": gs_id,
+        "settings": {
+            "alwaysOutputData": True
+        },
+        "credentials": {
+            "googleSheetsOAuth2Api": {
+                "id": "ZtQp7yZ6orrx1U2F",
+                "name": "Google Sheets OAuth2 API"
+            }
+        }
+    }
+
+    code_str = """const now = new Date();
+const items = [];
+for (const item of $input.all()) {
+  const appointmentStr = item.json.Appointment;
+  if (!appointmentStr) continue;
+  const appointDate = new Date(appointmentStr);
+  if (isNaN(appointDate.getTime())) continue;
+  const diffTime = appointDate.getTime() - now.getTime();
+  const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  let reminderType = null;
+  if (daysUntil === 20) reminderType = 'reminder_20days';
+  else if (daysUntil === 2) reminderType = 'reminder_2days';
+  else if (daysUntil === 1) reminderType = 'reminder_night_before';
+  else if (daysUntil === 0) reminderType = 'reminder_surgery_day';
+  else continue;
+
+  const p = item.json;
+  const name = p.Name || '';
+  const birthDate = p.BirthDate ? new Date(p.BirthDate) : null;
+  let age = null;
+  if (birthDate && !isNaN(birthDate.getTime())) {
+    const ageDiff = now - birthDate.getTime();
+    age = Math.floor(ageDiff / (1000 * 60 * 60 * 24 * 365.25));
+  }
+  const smoker = (p.Smoker || '').toString().toLowerCase() === 'yes' || p.Smoker === '???';
+  const alcohol = (p.Alcohol || '').toString().toLowerCase() === 'yes' || p.Alcohol === '???';
+  const drugs = (p.Drugs || '').toString().toLowerCase() === 'yes' || p.Drugs === '???';
+  const diabetes = (p.Diabetes || '').toString().toLowerCase() === 'yes' || p.Diabetes === '???';
+  const medicalConditions = p.MedicalConditions || '';
+  const allergies = p.Allergies || '';
+
+  let extraWarnings = '';
+  if (smoker) extraWarnings += '\\n?? ??? ?????? ?????. ?? ?? ???? ??? ?? ?? ???? ??? ?? ??? <b>????? ?? ????? ??? ????</b>.';
+  if (alcohol) extraWarnings += '\\n?? ???? <b>????</b> ?? ?? ???? ??? ?? ?? ???? ??? ????? ???.';
+  if (drugs) extraWarnings += '\\n?? ???? <b>???? ????</b> ?? ?? ??? ?? ?????? ????? ????.';
+  if (age !== null && age >= 65) extraWarnings += '\\n?? ?? ???? ?? ?? (????? ?? ???) <b>????? ????? ? ???? ???</b> ????? ????? ?????.';
+  if (diabetes) extraWarnings += '\\n?? ?? ???? ?? ????? ???? ???? ??? ?? ?? ???? ???? ????.';
+  if (medicalConditions) extraWarnings += `\\n?? ????? ????? ???: "${medicalConditions}". ???? ?? ???? ?????? ???????.`;
+  if (allergies) extraWarnings += `\\n?? ????????? ???: "${allergies}". ?? ??? ??? ?? ??? ????? ????.`;
+
+  let header, body;
+  if (reminderType === 'reminder_20days') {
+    header = '?? <b>?? ??? ?? ???? ??</b>\\n\\n' + name + ' ???? ?? ??? ?? ????? ???? ?? ???? ?????.';
+    body = '\\n? <b>??????:</b>\\n- ?? ????? <b>????? ?????????? ?%</b> ??????? ????.\\n\\n?? <b>???????:</b>\\n- ???? ?????? ???????? ?????? ?????? ?????????? B,E,C, ??????????? ?????.\\n- ???????? ? ?????? ??????? ?????.\\n- ???? ? ????? (???? ???) ?????.' + extraWarnings;
+  } else if (reminderType === 'reminder_2days') {
+    header = '?? <b>? ??? ?? ???? ??</b>\\n\\n' + name + ' ???? ? ??? ???? ?? ??? ???? ?????.';
+    body = '\\n? <b>???? ????:</b>\\n- ?? ????? <b>??? ?????????????? ???</b> ?? ?? ????.\\n\\n?? <b>??? ? ??? ??? ?? ???:</b>\\n? ?????: ?? ???? ?????? ????? ????? ??????? ?????? ???? ? ?????? ???? ???? ???? ???? ??? ???? ???? ? ???? ??????? ???? ???? ??? ? ??.\\n? ????: ??? ??? ????? ??? ??? ???? ??? ? ????.' + extraWarnings;
+  } else if (reminderType === 'reminder_night_before') {
+    header = '?? <b>?? ??? ?? ???</b>\\n\\n' + name + ' ???? ???? ??? ???? ??? ?????.';
+    body = '\\n- ?? ???? ????.\\n- ?? ???: <b>??? ????? ????</b>.\\n- ?? ???? <b>?????? ???????</b> ?????? (????? ?????).\\n- ?? ?????? ?? ????? ????.' + extraWarnings;
+  } else if (reminderType === 'reminder_surgery_day') {
+    header = '?? <b>??? ???</b>\\n\\n' + name + ' ???? ????? ??? ???? ??? ?????!';
+    body = '\\n- ?? ?????? <b>??? ? ????</b> ??? ????.\\n- ?? ?????? ??????? ?????? ?????.\\n- ?? ?????? ?? ????? ???????.\\n- ?? ???????? (CBC, HBS Ag, HCV, HIV, PT, PTT, INR, FBS, TSH, VitD, CRP, ESR) ?? ????? ?????.' + extraWarnings;
+  }
+
+  items.push({
+    json: {
+      Telegram_ID: p.Telegram_ID,
+      Name: name,
+      daysUntil,
+      reminderType,
+      customMessage: header + body
+    }
+  });
+}
+return items;"""
+
+    code_node = {
+        "parameters": {
+            "jsCode": code_str
+        },
+        "name": "Compute Days & Build Messages",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [-400, -300],
+        "id": code_id
+    }
+
+    switch_node = {
+        "parameters": {
+            "mode": "rules",
+            "rules": {
+                "values": [
+                    { "conditions": { "options": { "caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [ { "id": "1", "leftValue": "={{$json.reminderType}}", "rightValue": "reminder_20days", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": True, "outputKey": "20 Days" },
+                    { "conditions": { "options": { "caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [ { "id": "2", "leftValue": "={{$json.reminderType}}", "rightValue": "reminder_2days", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": True, "outputKey": "2 Days" },
+                    { "conditions": { "options": { "caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [ { "id": "3", "leftValue": "={{$json.reminderType}}", "rightValue": "reminder_night_before", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": True, "outputKey": "Night Before" },
+                    { "conditions": { "options": { "caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [ { "id": "4", "leftValue": "={{$json.reminderType}}", "rightValue": "reminder_surgery_day", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": True, "outputKey": "Surgery Day" }
+                ]
+            },
+            "options": {}
+        },
+        "name": "Route by Reminder Type",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3,
+        "position": [-200, -300],
+        "id": switch_id
+    }
+
+    def tg_node(name, pos, uid):
+        return {
+            "parameters": {
+                "chatId": "={{ $json.Telegram_ID }}",
+                "text": "={{ $json.customMessage }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "name": name,
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1,
+            "position": pos,
+            "id": uid,
+            "credentials": {
+                "telegramApi": {
+                    "id": "vXlmVUHJDbuCCLw6",
+                    "name": "Telegram account 2"
+                }
+            }
+        }
+
+    send20 = tg_node("Send20", [0, -200], send20_id)
+    send2 = tg_node("Send2", [200, -200], send2_id)
+    send1 = tg_node("SendNight", [400, -200], send1_id)
+    send0 = tg_node("SendSurgeryDay", [600, -200], send0_id)
+
+    nodes.extend([cron_node, gs_node, code_node, switch_node, send20, send2, send1, send0])
+
+    connections["cron-daily-reminder"] = { "main": [ [ { "node": "gs-getall-reminder", "type": "main", "index": 0 } ] ] }
+    connections["gs-getall-reminder"] = { "main": [ [ { "node": "Compute Days & Build Messages", "type": "main", "index": 0 } ] ] }
+    connections["Compute Days & Build Messages"] = { "main": [ [ { "node": "Route by Reminder Type", "type": "main", "index": 0 } ] ] }
+    
+    connections["Route by Reminder Type"] = {
+        "main": [
+            [ { "node": "Send20", "type": "main", "index": 0 } ],
+            [ { "node": "Send2", "type": "main", "index": 0 } ],
+            [ { "node": "SendNight", "type": "main", "index": 0 } ],
+            [ { "node": "SendSurgeryDay", "type": "main", "index": 0 } ]
+        ]
+    }
+
+    data["nodes"] = nodes
+    data["connections"] = connections
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    print("Success")

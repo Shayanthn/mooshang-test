@@ -611,6 +611,277 @@
           "name": "Telegram account 2"
         }
       }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "name": "cron-daily-reminder",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        -300
+      ],
+      "id": "655ee1c9-c091-4630-9d33-59af53047aaf"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1URPPHyppxT8mDRYG8e93KK5nEMpcF7pNWY2KkG_pmEw",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "name": "gs-getall-reminder",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -600,
+        -300
+      ],
+      "id": "d590d4ee-b5e2-4774-8497-e96f027e25a6",
+      "settings": {
+        "alwaysOutputData": true
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZtQp7yZ6orrx1U2F",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst items = [];\nfor (const item of $input.all()) {\n  const appointmentStr = item.json.Appointment;\n  if (!appointmentStr) continue;\n  const appointDate = new Date(appointmentStr);\n  if (isNaN(appointDate.getTime())) continue;\n  const diffTime = appointDate.getTime() - now.getTime();\n  const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));\n\n  let reminderType = null;\n  if (daysUntil === 20) reminderType = 'reminder_20days';\n  else if (daysUntil === 2) reminderType = 'reminder_2days';\n  else if (daysUntil === 1) reminderType = 'reminder_night_before';\n  else if (daysUntil === 0) reminderType = 'reminder_surgery_day';\n  else continue;\n\n  const p = item.json;\n  const name = p.Name || '';\n  const birthDate = p.BirthDate ? new Date(p.BirthDate) : null;\n  let age = null;\n  if (birthDate && !isNaN(birthDate.getTime())) {\n    const ageDiff = now - birthDate.getTime();\n    age = Math.floor(ageDiff / (1000 * 60 * 60 * 24 * 365.25));\n  }\n  const smoker = (p.Smoker || '').toString().toLowerCase() === 'yes' || p.Smoker === '???';\n  const alcohol = (p.Alcohol || '').toString().toLowerCase() === 'yes' || p.Alcohol === '???';\n  const drugs = (p.Drugs || '').toString().toLowerCase() === 'yes' || p.Drugs === '???';\n  const diabetes = (p.Diabetes || '').toString().toLowerCase() === 'yes' || p.Diabetes === '???';\n  const medicalConditions = p.MedicalConditions || '';\n  const allergies = p.Allergies || '';\n\n  let extraWarnings = '';\n  if (smoker) extraWarnings += '\\n?? ??? ?????? ?????. ?? ?? ???? ??? ?? ?? ???? ??? ?? ??? <b>????? ?? ????? ??? ????</b>.';\n  if (alcohol) extraWarnings += '\\n?? ???? <b>????</b> ?? ?? ???? ??? ?? ?? ???? ??? ????? ???.';\n  if (drugs) extraWarnings += '\\n?? ???? <b>???? ????</b> ?? ?? ??? ?? ?????? ????? ????.';\n  if (age !== null && age >= 65) extraWarnings += '\\n?? ?? ???? ?? ?? (????? ?? ???) <b>????? ????? ? ???? ???</b> ????? ????? ?????.';\n  if (diabetes) extraWarnings += '\\n?? ?? ???? ?? ????? ???? ???? ??? ?? ?? ???? ???? ????.';\n  if (medicalConditions) extraWarnings += `\\n?? ????? ????? ???: \"${medicalConditions}\". ???? ?? ???? ?????? ???????.`;\n  if (allergies) extraWarnings += `\\n?? ????????? ???: \"${allergies}\". ?? ??? ??? ?? ??? ????? ????.`;\n\n  let header, body;\n  if (reminderType === 'reminder_20days') {\n    header = '?? <b>?? ??? ?? ???? ??</b>\\n\\n' + name + ' ???? ?? ??? ?? ????? ???? ?? ???? ?????.';\n    body = '\\n? <b>??????:</b>\\n- ?? ????? <b>????? ?????????? ?%</b> ??????? ????.\\n\\n?? <b>???????:</b>\\n- ???? ?????? ???????? ?????? ?????? ?????????? B,E,C, ??????????? ?????.\\n- ???????? ? ?????? ??????? ?????.\\n- ???? ? ????? (???? ???) ?????.' + extraWarnings;\n  } else if (reminderType === 'reminder_2days') {\n    header = '?? <b>? ??? ?? ???? ??</b>\\n\\n' + name + ' ???? ? ??? ???? ?? ??? ???? ?????.';\n    body = '\\n? <b>???? ????:</b>\\n- ?? ????? <b>??? ?????????????? ???</b> ?? ?? ????.\\n\\n?? <b>??? ? ??? ??? ?? ???:</b>\\n? ?????: ?? ???? ?????? ????? ????? ??????? ?????? ???? ? ?????? ???? ???? ???? ???? ??? ???? ???? ? ???? ??????? ???? ???? ??? ? ??.\\n? ????: ??? ??? ????? ??? ??? ???? ??? ? ????.' + extraWarnings;\n  } else if (reminderType === 'reminder_night_before') {\n    header = '?? <b>?? ??? ?? ???</b>\\n\\n' + name + ' ???? ???? ??? ???? ??? ?????.';\n    body = '\\n- ?? ???? ????.\\n- ?? ???: <b>??? ????? ????</b>.\\n- ?? ???? <b>?????? ???????</b> ?????? (????? ?????).\\n- ?? ?????? ?? ????? ????.' + extraWarnings;\n  } else if (reminderType === 'reminder_surgery_day') {\n    header = '?? <b>??? ???</b>\\n\\n' + name + ' ???? ????? ??? ???? ??? ?????!';\n    body = '\\n- ?? ?????? <b>??? ? ????</b> ??? ????.\\n- ?? ?????? ??????? ?????? ?????.\\n- ?? ?????? ?? ????? ???????.\\n- ?? ???????? (CBC, HBS Ag, HCV, HIV, PT, PTT, INR, FBS, TSH, VitD, CRP, ESR) ?? ????? ?????.' + extraWarnings;\n  }\n\n  items.push({\n    json: {\n      Telegram_ID: p.Telegram_ID,\n      Name: name,\n      daysUntil,\n      reminderType,\n      customMessage: header + body\n    }\n  });\n}\nreturn items;"
+      },
+      "name": "Compute Days & Build Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -300
+      ],
+      "id": "5309e867-f51f-42f9-8582-d9d419bf0cf0"
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1",
+                    "leftValue": "={{$json.reminderType}}",
+                    "rightValue": "reminder_20days",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "20 Days"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2",
+                    "leftValue": "={{$json.reminderType}}",
+                    "rightValue": "reminder_2days",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "2 Days"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3",
+                    "leftValue": "={{$json.reminderType}}",
+                    "rightValue": "reminder_night_before",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Night Before"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4",
+                    "leftValue": "={{$json.reminderType}}",
+                    "rightValue": "reminder_surgery_day",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Surgery Day"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Route by Reminder Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -200,
+        -300
+      ],
+      "id": "3f52d570-8373-4813-be45-e178b1ae9d35"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.Telegram_ID }}",
+        "text": "={{ $json.customMessage }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Send20",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -200
+      ],
+      "id": "691599fd-36b9-43f5-bd71-170fc5760739",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.Telegram_ID }}",
+        "text": "={{ $json.customMessage }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Send2",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -200
+      ],
+      "id": "b6cb1526-f37c-4cf1-a511-67896ebf9842",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.Telegram_ID }}",
+        "text": "={{ $json.customMessage }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "SendNight",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -200
+      ],
+      "id": "5a656bde-739c-4f04-9162-dcd2e38ce3b0",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.Telegram_ID }}",
+        "text": "={{ $json.customMessage }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "SendSurgeryDay",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        600,
+        -200
+      ],
+      "id": "24bb1784-157b-4e57-9d9f-4dc38dc72168",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
     }
   ],
   "connections": {
@@ -808,6 +1079,71 @@
         [
           {
             "node": "CRM: Allergies Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cron-daily-reminder": {
+      "main": [
+        [
+          {
+            "node": "gs-getall-reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gs-getall-reminder": {
+      "main": [
+        [
+          {
+            "node": "Compute Days & Build Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Days & Build Messages": {
+      "main": [
+        [
+          {
+            "node": "Route by Reminder Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Reminder Type": {
+      "main": [
+        [
+          {
+            "node": "Send20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SendNight",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SendSurgeryDay",
             "type": "main",
             "index": 0
           }
