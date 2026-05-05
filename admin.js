@@ -384,6 +384,9 @@ async function saveUserDetails(e) {
     const appointment = document.getElementById('modal-appointment').value;
     const notes = document.getElementById('modal-notes').value;
 
+    // Find the user object to send medical data for CRM logic in n8n
+    const user = usersData.find(u => Number(u.user_id) === Number(userId));
+
     try {
         // Send to Webhook
         const response = await fetch(`${N8N_WEBHOOK_BASE}/admin-update-user`, {
@@ -392,10 +395,11 @@ async function saveUserDetails(e) {
             body: JSON.stringify({
                 user_id: Number(userId),
                 appointment: appointment,
-                notes: notes
-            })
-        });
-        
+                notes: notes,
+                age: user ? user.age : null,
+                allergies: user ? user.allergies : null,
+                surgeries: user ? user.surgeries : null,
+                firstName: user ? user.first_name : ''
         let res = {};
         try { res = await response.json(); } catch(e) {}
         

@@ -268,7 +268,11 @@
             "Phone": "={{ String($json.body.phone) }}",
             "Smoker": "={{$json.body.smoker}}",
             "Diabetes": "={{$json.body.diabetes}}",
-            "Date": "={{new Date().toLocaleString('fa-IR')}}"
+            "Date": "={{new Date().toLocaleString('fa-IR')}}",
+            "Age": "={{$json.body.age}}",
+            "Allergies": "={{$json.body.allergies}}",
+            "Surgeries": "={{$json.body.surgeries}}",
+            "Medications": "={{$json.body.medications}}"
           }
         },
         "options": {
@@ -335,7 +339,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const users = $input.all().map(item => {\n  return {\n    user_id: item.json.Telegram_ID,\n    first_name: item.json.Name,\n    last_name: item.json.Last_name || item.json.Last_Name,\n    phone: item.json.Phone,\n    smoker: item.json.Smoker,\n    diabetes: item.json.Diabetes,\n    created_at: item.json.Date,\n    appointment: item.json.Appointment || \"\",\n    notes: item.json.Notes || \"\"\n  };\n});\n\nreturn [\n  {\n    json: {\n      status: \"success\",\n      data: users\n    }\n  }\n];"
+        "jsCode": "const users = $input.all().map(item => {\n  return {\n    user_id: item.json.Telegram_ID,\n    first_name: item.json.Name,\n    last_name: item.json.Last_name || item.json.Last_Name,\n    phone: item.json.Phone,\n    smoker: item.json.Smoker,\n    diabetes: item.json.Diabetes,\n    age: item.json.Age,\n    allergies: item.json.Allergies,\n    surgeries: item.json.Surgeries,\n    medications: item.json.Medications,\n    created_at: item.json.Date,\n    appointment: item.json.Appointment || \"\",\n    notes: item.json.Notes || \"\"\n  };\n});\n\nreturn [\n  {\n    json: {\n      status: \"success\",\n      data: users\n    }\n  }\n];"
       },
       "name": "Format Data",
       "type": "n8n-nodes-base.code",
@@ -478,15 +482,128 @@
     {
       "parameters": {
         "chatId": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"user_id\"]}}",
-        "text": "🗓 بیمار عزیز، پیام جدید از طرف کلینیک:\n\n✅ وقت کاشت شما تنظیم شد!\n⏰ تاریخ و زمان: {{$node[\"Webhook (Update User)\"].json[\"body\"][\"appointment\"]}}\n\nلطفا در زمان تعیین شده در کلینیک حضور داشته باشید.",
+        "text": "???? {{$node[\"Webhook (Update User)\"].json[\"body\"][\"firstName\"]}} ????\n???? ???? ??? ?? ????? {{$node[\"Webhook (Update User)\"].json[\"body\"][\"appointment\"]}} ??? ??. ???? ????????????? ????? ?? ?? ??? ?????? ????.\n\n?? **??????? ??????:**\n- ?? ?? ??? ???: ????? ?? ????? ?????????? ?%\n- ?? ? ??? ??? (?? ?? ????): ???? ??? ?????????????? ???\n?? ??? ???? ????: ?????? ???????? ???? ????? ??????.\n\n?? **??? ?????:**\n- ??????? ?? ?? ??? ???: ???? ? ?????????? ?????????.\n- ??????? ?? ? ??? ??? ?? ? ??? ???: ???? ????? ? ????.\n\n?? **???? ???????? ????:**\nCBC, HBS Ag, HCV, HIV, Pt, Ptt, INR, FBS\n? ???? ?? ?? ????? ?????? ?? ??? ?? ???? ?? ?? ???? ???? ??? ?????? ? ????? ???? ?? ????? ?????? ??? ???.",
         "additionalFields": {}
       },
-      "name": "Notify User (Telegram)",
+      "name": "CRM: General Instructions",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1,
       "position": [
         880,
         180
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"age\"] || 0}}",
+              "rightValue": 65,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "c2",
+              "leftValue": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"surgeries\"] || \"\"}}",
+              "rightValue": "???",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "name": "IF: High Risk (Age/Surgery)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1080,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"user_id\"]}}",
+        "text": "?? **????? ??? ????? ???:**\n?? ???? ?? ????? ??? ?? ????? ????? ??? ?? ??? ????? ???? ??? ?? ???? ???? ????? ?? ???????? ????? ?? ???? ????? ???:\n1. ????? ????? ? ????? ?????\n2. ????? ???? ??? (ECG)\n??? ???? ? ?? ???? ??? ????? ?? ?? ???? ?? ?? ?????? ???????.",
+        "additionalFields": {}
+      },
+      "name": "CRM: High Risk Warning",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        80
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c3",
+              "leftValue": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"allergies\"] || \"\"}}",
+              "rightValue": "???",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "name": "IF: Allergies",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1480,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"user_id\"]}}",
+        "text": "?? **????? ????? ??????:**\n????? ????? ??? ?? ??? ??? ??????? ?? ????? ???? ???? ?????? ?? ?????? ?????. ???? ?? ???? ?????? ???? ?? ???????? ??? ?????? ???? ?? ???? ???? ?? ??????? ?????? ????.",
+        "additionalFields": {}
+      },
+      "name": "CRM: Allergies Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        80
       ],
       "credentials": {
         "telegramApi": {
@@ -639,7 +756,58 @@
       "main": [
         [
           {
-            "node": "Notify User (Telegram)",
+            "node": "CRM: General Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM: General Instructions": {
+      "main": [
+        [
+          {
+            "node": "IF: High Risk (Age/Surgery)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: High Risk (Age/Surgery)": {
+      "main": [
+        [
+          {
+            "node": "CRM: High Risk Warning",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Allergies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM: High Risk Warning": {
+      "main": [
+        [
+          {
+            "node": "IF: Allergies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Allergies": {
+      "main": [
+        [
+          {
+            "node": "CRM: Allergies Alert",
             "type": "main",
             "index": 0
           }
