@@ -155,7 +155,7 @@
                     "text": "📝 ورود به فرم ثبت اطلاعات",
                     "additionalFields": {
                       "web_app": {
-                        "url": "=https://shayanthn.github.io/clinic_assistance/index.html?user_id={{ $('Telegram Trigger').first().json.message.from.id }}"
+                        "url": "=https://shayanthn.github.io/mooshang-test/index.html?user_id={{ $('Telegram Trigger').first().json.message.from.id }}"
                       }
                     }
                   }
