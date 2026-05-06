@@ -355,7 +355,15 @@ function openUserModal(userId) {
     document.getElementById('modal-user-diabetes').innerText = user.diabetes === 'yes' ? 'دارد (بله)' : 'ندارد (خیر)';
     document.getElementById('modal-user-age').innerText = user.age ? user.age : 'نامشخص';
     document.getElementById('modal-user-allergies').innerText = user.allergies ? user.allergies : 'نامشخص';
-    document.getElementById('modal-user-surgeries').innerText = user.surgeries ? user.surgeries : 'نامشخص';
+    document.getElementById('modal-user-surgeries').innerText = user.surgeries || 'نامشخص';
+
+    // New Fields
+    document.getElementById('modal-user-national-id').innerText = user.national_id || 'ثبت نشده';
+    document.getElementById('modal-user-address').innerText = user.address || 'ثبت نشده';
+    document.getElementById('modal-user-alcohol').innerText = user.alcohol === 'yes' ? 'بله' : 'خیر';
+    document.getElementById('modal-user-drugs').innerText = user.drugs === 'yes' ? 'بله' : 'خیر';
+    document.getElementById('modal-user-medications').innerText = user.medications || 'بدون مصرف دارو';
+
     
     document.getElementById('modal-appointment').value = user.appointment || '';
     document.getElementById('modal-notes').value = user.notes || '';

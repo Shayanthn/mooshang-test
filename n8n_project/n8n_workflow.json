@@ -272,7 +272,11 @@
             "Age": "={{$json.body.age}}",
             "Allergies": "={{$json.body.allergies}}",
             "Surgeries": "={{$json.body.surgeries}}",
-            "Medications": "={{$json.body.medications}}"
+            "Medications": "={{$json.body.medications}}",
+            "National_ID": "={{$json.body.nationalId}}",
+            "Address": "={{$json.body.address}}",
+            "Alcohol": "={{$json.body.alcohol}}",
+            "Drugs": "={{$json.body.drugs}}"
           }
         },
         "options": {
@@ -339,7 +343,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const users = $input.all().map(item => {\n  return {\n    user_id: item.json.Telegram_ID,\n    first_name: item.json.Name,\n    last_name: item.json.Last_name || item.json.Last_Name,\n    phone: item.json.Phone,\n    smoker: item.json.Smoker,\n    diabetes: item.json.Diabetes,\n    age: item.json.Age,\n    allergies: item.json.Allergies,\n    surgeries: item.json.Surgeries,\n    medications: item.json.Medications,\n    created_at: item.json.Date,\n    appointment: item.json.Appointment || \"\",\n    notes: item.json.Notes || \"\"\n  };\n});\n\nreturn [\n  {\n    json: {\n      status: \"success\",\n      data: users\n    }\n  }\n];"
+        "jsCode": "const users = $input.all().map(item => {\n  return {\n    user_id: item.json.Telegram_ID,\n    first_name: item.json.Name,\n    last_name: item.json.Last_name || item.json.Last_Name,\n    phone: item.json.Phone,\n    smoker: item.json.Smoker,\n    diabetes: item.json.Diabetes,\n    age: item.json.Age,\n    national_id: item.json.National_ID,\n    address: item.json.Address,\n    alcohol: item.json.Alcohol,\n    drugs: item.json.Drugs,\n    allergies: item.json.Allergies,\n    surgeries: item.json.Surgeries,\n    medications: item.json.Medications,\n    created_at: item.json.Date,\n    appointment: item.json.Appointment || \"\",\n    notes: item.json.Notes || \"\"\n  };\n});\n\nreturn [\n  {\n    json: {\n      status: \"success\",\n      data: users\n    }\n  }\n];"
       },
       "name": "Format Data",
       "type": "n8n-nodes-base.code",
