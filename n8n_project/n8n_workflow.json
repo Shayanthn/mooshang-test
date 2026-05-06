@@ -482,7 +482,7 @@
     {
       "parameters": {
         "chatId": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"user_id\"]}}",
-        "text": "???? {{$node[\"Webhook (Update User)\"].json[\"body\"][\"firstName\"]}} ????\n???? ???? ??? ?? ????? {{$node[\"Webhook (Update User)\"].json[\"body\"][\"appointment\"]}} ??? ??. ???? ????????????? ????? ?? ?? ??? ?????? ????.\n\n?? **??????? ??????:**\n- ?? ?? ??? ???: ????? ?? ????? ?????????? ?%\n- ?? ? ??? ??? (?? ?? ????): ???? ??? ?????????????? ???\n?? ??? ???? ????: ?????? ???????? ???? ????? ??????.\n\n?? **??? ?????:**\n- ??????? ?? ?? ??? ???: ???? ? ?????????? ?????????.\n- ??????? ?? ? ??? ??? ?? ? ??? ???: ???? ????? ? ????.\n\n?? **???? ???????? ????:**\nCBC, HBS Ag, HCV, HIV, Pt, Ptt, INR, FBS\n? ???? ?? ?? ????? ?????? ?? ??? ?? ???? ?? ?? ???? ???? ??? ?????? ? ????? ???? ?? ????? ?????? ??? ???.",
+        "text": "👤 نام بیمار: {{$node[\"Webhook (Update User)\"].json[\"body\"][\"firstName\"]}}\n📅 وقت تعیین شده برای شما: {{$node[\"Webhook (Update User)\"].json[\"body\"][\"appointment\"]}}\n\n🔔 دستورالعمل‌های عمومی قبل از عمل:\n- حتما آزمایشات قبل از عمل را انجام دهید.\n- هزینه عمل طبق تعرفه با شما هماهنگ خواهد شد.\n\nآزمایشات لازم:\nCBC, HBS Ag, HCV, HIV, Pt, Ptt, INR, FBS\n(لطفا جواب آزمایشات را روز عمل همراه داشته باشید).",
         "additionalFields": {}
       },
       "name": "CRM: General Instructions",
@@ -521,7 +521,7 @@
             {
               "id": "c2",
               "leftValue": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"surgeries\"] || \"\"}}",
-              "rightValue": "???",
+              "rightValue": "ندارد",
               "operator": {
                 "type": "string",
                 "operation": "notEquals"
@@ -543,7 +543,7 @@
     {
       "parameters": {
         "chatId": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"user_id\"]}}",
-        "text": "?? **????? ??? ????? ???:**\n?? ???? ?? ????? ??? ?? ????? ????? ??? ?? ??? ????? ???? ??? ?? ???? ???? ????? ?? ???????? ????? ?? ???? ????? ???:\n1. ????? ????? ? ????? ?????\n2. ????? ???? ??? (ECG)\n??? ???? ? ?? ???? ??? ????? ?? ?? ???? ?? ?? ?????? ???????.",
+        "text": "⚠️ هشدار ریسک بالا:\nبا توجه به سن یا سوابق جراحی، لطفا قبل از عمل علاوه بر آزمایشات روتین، تاییدیه پزشک متخصص قلب و عروق (اکو و نوار قلب) را نیز دریافت کنید.",
         "additionalFields": {}
       },
       "name": "CRM: High Risk Warning",
@@ -573,7 +573,7 @@
             {
               "id": "c3",
               "leftValue": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"allergies\"] || \"\"}}",
-              "rightValue": "???",
+              "rightValue": "ندارد",
               "operator": {
                 "type": "string",
                 "operation": "notEquals"
@@ -595,7 +595,7 @@
     {
       "parameters": {
         "chatId": "={{$node[\"Webhook (Update User)\"].json[\"body\"][\"user_id\"]}}",
-        "text": "?? **????? ????? ??????:**\n????? ????? ??? ?? ??? ??? ??????? ?? ????? ???? ???? ?????? ?? ?????? ?????. ???? ?? ???? ?????? ???? ?? ???????? ??? ?????? ???? ?? ???? ???? ?? ??????? ?????? ????.",
+        "text": "⚠️ هشدار حساسیت دارویی:\nشما در فرم ثبت‌نام به حساسیت دارویی/غذایی اشاره کرده‌اید. لطفا روز عمل، پزشک و پرستار کلینیک را مستقیماً در جریان نوع حساسیت خود قرار دهید.",
         "additionalFields": {}
       },
       "name": "CRM: Allergies Alert",
@@ -666,7 +666,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const now = new Date();\nconst items = [];\nfor (const item of $input.all()) {\n  const appointmentStr = item.json.Appointment;\n  if (!appointmentStr) continue;\n  const appointDate = new Date(appointmentStr);\n  if (isNaN(appointDate.getTime())) continue;\n  const diffTime = appointDate.getTime() - now.getTime();\n  const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));\n\n  let reminderType = null;\n  if (daysUntil === 20) reminderType = 'reminder_20days';\n  else if (daysUntil === 2) reminderType = 'reminder_2days';\n  else if (daysUntil === 1) reminderType = 'reminder_night_before';\n  else if (daysUntil === 0) reminderType = 'reminder_surgery_day';\n  else continue;\n\n  const p = item.json;\n  const name = p.Name || '';\n  const birthDate = p.BirthDate ? new Date(p.BirthDate) : null;\n  let age = null;\n  if (birthDate && !isNaN(birthDate.getTime())) {\n    const ageDiff = now - birthDate.getTime();\n    age = Math.floor(ageDiff / (1000 * 60 * 60 * 24 * 365.25));\n  }\n  const smoker = (p.Smoker || '').toString().toLowerCase() === 'yes' || p.Smoker === '???';\n  const alcohol = (p.Alcohol || '').toString().toLowerCase() === 'yes' || p.Alcohol === '???';\n  const drugs = (p.Drugs || '').toString().toLowerCase() === 'yes' || p.Drugs === '???';\n  const diabetes = (p.Diabetes || '').toString().toLowerCase() === 'yes' || p.Diabetes === '???';\n  const medicalConditions = p.MedicalConditions || '';\n  const allergies = p.Allergies || '';\n\n  let extraWarnings = '';\n  if (smoker) extraWarnings += '\\n?? ??? ?????? ?????. ?? ?? ???? ??? ?? ?? ???? ??? ?? ??? <b>????? ?? ????? ??? ????</b>.';\n  if (alcohol) extraWarnings += '\\n?? ???? <b>????</b> ?? ?? ???? ??? ?? ?? ???? ??? ????? ???.';\n  if (drugs) extraWarnings += '\\n?? ???? <b>???? ????</b> ?? ?? ??? ?? ?????? ????? ????.';\n  if (age !== null && age >= 65) extraWarnings += '\\n?? ?? ???? ?? ?? (????? ?? ???) <b>????? ????? ? ???? ???</b> ????? ????? ?????.';\n  if (diabetes) extraWarnings += '\\n?? ?? ???? ?? ????? ???? ???? ??? ?? ?? ???? ???? ????.';\n  if (medicalConditions) extraWarnings += `\\n?? ????? ????? ???: \"${medicalConditions}\". ???? ?? ???? ?????? ???????.`;\n  if (allergies) extraWarnings += `\\n?? ????????? ???: \"${allergies}\". ?? ??? ??? ?? ??? ????? ????.`;\n\n  let header, body;\n  if (reminderType === 'reminder_20days') {\n    header = '?? <b>?? ??? ?? ???? ??</b>\\n\\n' + name + ' ???? ?? ??? ?? ????? ???? ?? ???? ?????.';\n    body = '\\n? <b>??????:</b>\\n- ?? ????? <b>????? ?????????? ?%</b> ??????? ????.\\n\\n?? <b>???????:</b>\\n- ???? ?????? ???????? ?????? ?????? ?????????? B,E,C, ??????????? ?????.\\n- ???????? ? ?????? ??????? ?????.\\n- ???? ? ????? (???? ???) ?????.' + extraWarnings;\n  } else if (reminderType === 'reminder_2days') {\n    header = '?? <b>? ??? ?? ???? ??</b>\\n\\n' + name + ' ???? ? ??? ???? ?? ??? ???? ?????.';\n    body = '\\n? <b>???? ????:</b>\\n- ?? ????? <b>??? ?????????????? ???</b> ?? ?? ????.\\n\\n?? <b>??? ? ??? ??? ?? ???:</b>\\n? ?????: ?? ???? ?????? ????? ????? ??????? ?????? ???? ? ?????? ???? ???? ???? ???? ??? ???? ???? ? ???? ??????? ???? ???? ??? ? ??.\\n? ????: ??? ??? ????? ??? ??? ???? ??? ? ????.' + extraWarnings;\n  } else if (reminderType === 'reminder_night_before') {\n    header = '?? <b>?? ??? ?? ???</b>\\n\\n' + name + ' ???? ???? ??? ???? ??? ?????.';\n    body = '\\n- ?? ???? ????.\\n- ?? ???: <b>??? ????? ????</b>.\\n- ?? ???? <b>?????? ???????</b> ?????? (????? ?????).\\n- ?? ?????? ?? ????? ????.' + extraWarnings;\n  } else if (reminderType === 'reminder_surgery_day') {\n    header = '?? <b>??? ???</b>\\n\\n' + name + ' ???? ????? ??? ???? ??? ?????!';\n    body = '\\n- ?? ?????? <b>??? ? ????</b> ??? ????.\\n- ?? ?????? ??????? ?????? ?????.\\n- ?? ?????? ?? ????? ???????.\\n- ?? ???????? (CBC, HBS Ag, HCV, HIV, PT, PTT, INR, FBS, TSH, VitD, CRP, ESR) ?? ????? ?????.' + extraWarnings;\n  }\n\n  items.push({\n    json: {\n      Telegram_ID: p.Telegram_ID,\n      Name: name,\n      daysUntil,\n      reminderType,\n      customMessage: header + body\n    }\n  });\n}\nreturn items;"
+        "jsCode": "const now = new Date();\nconst todayStr = now.toISOString().split('T')[0];\nconst startOfToday = new Date(todayStr + \"T00:00:00.000Z\");\n\nconst items = [];\nfor (const item of $input.all()) {\n  const appointmentStr = item.json.Appointment;\n  if (!appointmentStr) continue;\n\n  const appointDate = new Date(appointmentStr + \"T00:00:00.000Z\");\n  if (isNaN(appointDate.getTime())) continue;\n\n  const diffTime = appointDate.getTime() - startOfToday.getTime();\n  const daysUntil = Math.round(diffTime / (1000 * 60 * 60 * 24)); // منفی به معنی گذشتن از عمل است\n\n  let reminderType = null;\n  if (daysUntil === 20) reminderType = 'reminder_20days';\n  else if (daysUntil === 2) reminderType = 'reminder_2days';\n  else if (daysUntil === 1) reminderType = 'reminder_night_before';\n  else if (daysUntil === 0) reminderType = 'reminder_surgery_day';\n  else if (daysUntil === -3) reminderType = 'followup_day3';\n  else if (daysUntil === -7) reminderType = 'followup_day7';\n  else continue;\n\n  const p = item.json;\n  const name = p.Name || '';\n  const age = parseInt(p.Age) || null;\n\n  const smoker = (p.Smoker || '').toString().toLowerCase() === 'yes' || p.Smoker === 'دارد' || p.Smoker === 'بله';\n  const diabetes = (p.Diabetes || '').toString().toLowerCase() === 'yes' || p.Diabetes === 'دارد' || p.Diabetes === 'بله';\n  const allergies = p.Allergies || '';\n\n  let extraWarnings = '';\n  if (smoker) extraWarnings += '\\n🚭 شما سابقه مصرف دخانیات ثبت کرده‌اید. لطفا حداقل ۲ هفته قبل از عمل مصرف دخانیات را متوقف کنید.';\n  if (diabetes) extraWarnings += '\\n🩸 با توجه به دیابت، حتما قند خون خود را کنترل کرده و روز عمل داروهای قند خود را همراه داشته باشید.';\n  if (age !== null && age >= 65) extraWarnings += '\\n👴👵 با توجه به سن شما، تاییدیه قلب و عروق (اکو) الزامی است.';\n  if (allergies && allergies !== 'ندارد' && allergies !== 'خیر') extraWarnings += `\\n⚠️ هشدار حساسیت: در پرونده شما حساسیت به \"${allergies}\" ثبت شده است. حتما پیش از عمل به پزشک یادآوری کنید.`;\n\n  let header, body;\n  if (reminderType === 'reminder_20days') {\n    header = '🔔 <b>۲۰ روز مانده به عمل</b>\\n\\n' + name + ' عزیز، ۲۰ روز تا تاریخ عمل شما زمان باقیست.';\n    body = '\\n📌 <b>وظایف شما:</b>\\n- لطفا آزمایشات قبل از عمل را در اسرع وقت انجام دهید تا در صورت وجود مشکل، فرصت درمان باشد.' + extraWarnings;\n  } else if (reminderType === 'reminder_2days') {\n    header = '🔔 <b>۲ روز مانده به عمل</b>\\n\\n' + name + ' عزیز، تنها ۲ روز تا عمل شما باقیست.';\n    body = '\\n📌 <b>لطفا توجه کنید:</b>\\n- مصرف داروهای رقیق‌کننده خون را متوقف کنید.\\n- در صورت داشتن علائم سرماخوردگی فورا به کلینیک اطلاع دهید.' + extraWarnings;\n  } else if (reminderType === 'reminder_night_before') {\n    header = '🔔 <b>شب قبل از عمل</b>\\n\\n' + name + ' عزیز، فردا روز عمل شماست.';\n    body = '\\n- لطفا از ساعت ۱۲ امشب <b>ناشتا</b> باشید (حتی آب ننوشید).\\n- مدارک پزشکی، جواب آزمایشات و کارت شناسایی را آماده کنید.\\n- شام سبک میل کنید و استراحت کافی داشته باشید.' + extraWarnings;\n  } else if (reminderType === 'reminder_surgery_day') {\n    header = '🔔 <b>روز عمل</b>\\n\\n' + name + ' عزیز، امروز منتظر شما هستیم!';\n    body = '\\n- لطفا با یک همراه مراجعه کنید.\\n- هیچ‌گونه زیورآلات همراه نداشته باشید.\\n- در زمان تعیین شده در کلینیک حضور یابید.' + extraWarnings;\n  } else if (reminderType === 'followup_day3') {\n    header = '🩺 <b>پیگیری روز سوم پس از عمل</b>\\n\\n' + name + ' عزیز، امیدواریم حالتان خوب باشد.';\n    body = '\\nلطفا به ما اطلاع دهید وضعیت درد شما چگونه است؟ (از ۱ تا ۱۰ به درد خود چه نمره‌ای می‌دهید؟ در همین صفحه ارسال کنید)\\n\\nدر صورت وجود خونریزی یا ورم غیرطبیعی، حتما یک عکس واضح از ناحیه عمل در همین چت ارسال کنید تا پزشک به صورت مستقیم وضعیت شما را بررسی کند.';\n  } else if (reminderType === 'followup_day7') {\n    header = '🩺 <b>پیگیری روز هفتم پس از عمل</b>\\n\\n' + name + ' عزیز، یک هفته از عمل شما گذشت.';\n    body = '\\nوقت آن رسیده که روند نقاهت شما بررسی شود.\\nلطفا یک عکس واضح از ناحیه عمل بفرستید تا روند بهبودی توسط کلینیک تایید شود.\\nآیا متوجه علائم غیرطبیعی یا عفونت شده‌اید؟';\n  }\n\n  items.push({\n    json: {\n      Telegram_ID: p.Telegram_ID,\n      Name: name,\n      daysUntil,\n      reminderType,\n      customMessage: header + body\n    }\n  });\n}\nreturn items;\n"
       },
       "name": "Compute Days & Build Messages",
       "type": "n8n-nodes-base.code",
@@ -777,6 +777,54 @@
               },
               "renameOutput": true,
               "outputKey": "Surgery Day"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9e40f95f-fe37-4781-bbcb-535f7f2a4795",
+                    "leftValue": "={{$json.reminderType}}",
+                    "rightValue": "followup_day3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Day 3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8436b1d1-84dc-45b5-b2ce-1991f0cc07f0",
+                    "leftValue": "={{$json.reminderType}}",
+                    "rightValue": "followup_day7",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Day 7"
             }
           ]
         },
@@ -882,6 +930,149 @@
           "name": "Telegram account 2"
         }
       }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.Telegram_ID }}",
+        "text": "={{ $json.customMessage }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "درد خفیف (۱-۳)",
+                    "additionalFields": {
+                      "callback_data": "pain_low"
+                    }
+                  },
+                  {
+                    "text": "درد متوسط (۴-۶)",
+                    "additionalFields": {
+                      "callback_data": "pain_mid"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "درد شدید! (۷-۱۰)",
+                    "additionalFields": {
+                      "callback_data": "pain_high"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "SendFollowUp3",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -200
+      ],
+      "id": "1cb5f797-162c-4b43-aaa0-560c070010ba",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.Telegram_ID }}",
+        "text": "={{ $json.customMessage }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "SendFollowUp7",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -200
+      ],
+      "id": "7696b8e9-e39c-423d-b20b-8509aa3cfea0",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "191750790",
+        "text": "=💬 پیامی از بیمار خارج از دستور ربات دریافت شد!\n\nآیدی: {{$json.message.from.id}}\nمتن:\n{{$json.message.text || 'بدون متن (شاید عکس ارسال شده)'}}",
+        "additionalFields": {}
+      },
+      "name": "Forward To Admin",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        112,
+        650
+      ],
+      "id": "559af427-d1d5-4912-acde-61f3d7882f27",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5001/ask-ai",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"message\": \"{{$json.message.text}}\", \"user_id\": \"{{$json.message.from.id}}\" }",
+        "options": {}
+      },
+      "name": "Ask AI FAQ",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        112,
+        850
+      ],
+      "id": "d46ecbc6-f52f-44f1-a90b-dd57acbb2639"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.from.id }}",
+        "text": "={{ $json.reply }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Send AI Reply to Patient",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        320,
+        850
+      ],
+      "id": "e79da27b-4b6e-4300-aa86-90e05508114b",
+      "credentials": {
+        "telegramApi": {
+          "id": "vXlmVUHJDbuCCLw6",
+          "name": "Telegram account 2"
+        }
+      }
     }
   ],
   "connections": {
@@ -901,6 +1092,13 @@
         [
           {
             "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Forward To Admin",
             "type": "main",
             "index": 0
           }
@@ -1125,6 +1323,16 @@
             "node": "Send20",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "SendFollowUp3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SendFollowUp7",
+            "type": "main",
+            "index": 0
           }
         ],
         [
@@ -1144,6 +1352,42 @@
         [
           {
             "node": "SendSurgeryDay",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SendFollowUp3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SendFollowUp7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forward To Admin": {
+      "main": [
+        [
+          {
+            "node": "Ask AI FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask AI FAQ": {
+      "main": [
+        [
+          {
+            "node": "Send AI Reply to Patient",
             "type": "main",
             "index": 0
           }
