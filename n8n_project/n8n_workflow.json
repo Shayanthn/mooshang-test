@@ -1040,7 +1040,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:5001/ask-ai",
+        "url": "https://mooshang-test.vercel.app/ask-ai",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"message\": \"{{$json.message.text}}\", \"user_id\": \"{{$json.message.from.id}}\" }",
