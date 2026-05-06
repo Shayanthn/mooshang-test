@@ -9,6 +9,7 @@ app = Flask(__name__)
 # اگر از سایت‌های ایرانی (روبین، جی‌پی‌تی-ای‌پی‌آی و...) که تحریم نیستند استفاده می‌کنید، Bsae URL را تغییر دهید.
 API_KEY = os.environ.get("OPENAI_API_KEY", "your-openai-api-key-here")
 BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1") 
+MODEL_NAME = os.environ.get("AI_MODEL", "gpt-4o-mini")
 
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
@@ -49,7 +50,7 @@ def ask_ai():
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini", # مدل پیشنهادی برای سرعت و قیمت مناسب
+            model=MODEL_NAME, # مدل به صورت خودکار از متغیرهای محیطی خوانده میشود
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT.replace("{CLINIC_PROTOCOLS}", CLINIC_PROTOCOLS)},
                 {"role": "user", "content": user_message}
