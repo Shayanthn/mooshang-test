@@ -5,13 +5,21 @@ from openai import OpenAI
 
 app = Flask(__name__)
 
-# شما می‌توانید کلید API خود را اینجا وارد کنید یا در فایل .env بگذارید
-# اگر از سایت‌های ایرانی (روبین، جی‌پی‌تی-ای‌پی‌آی و...) که تحریم نیستند استفاده می‌کنید، Bsae URL را تغییر دهید.
-API_KEY = os.environ.get("OPENAI_API_KEY", "your-openai-api-key-here")
-BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1") 
-MODEL_NAME = os.environ.get("AI_MODEL", "gpt-4o-mini")
+# تنظیمات مدل‌های رایگان با قابلیت جایگزینی خودکار (Fallback)
 
-client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
+# --- Primary AI (Gemini) ---
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+GEMINI_MODEL = "gemini-1.5-flash-latest"
+
+gemini_client = OpenAI(api_key=GEMINI_API_KEY, base_url=GEMINI_BASE_URL)
+
+# --- Fallback AI (OpenRouter) ---
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_MODEL = "openai/gpt-oss-20b:free"
+
+openrouter_client = OpenAI(api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_BASE_URL)
 
 # خواندن پروتکل‌های کلینیک (پایگاه دانش - RAG Context)
 def load_knowledge_base():
@@ -49,21 +57,36 @@ def ask_ai():
         return jsonify({"reply": "متامی دریافت نشد."}), 400
 
     try:
-        response = client.chat.completions.create(
-            model=MODEL_NAME, # مدل به صورت خودکار از متغیرهای محیطی خوانده میشود
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT.replace("{CLINIC_PROTOCOLS}", CLINIC_PROTOCOLS)},
-                {"role": "user", "content": user_message}
-            ],
-            temperature=0.3, # برای اینکه دقت علمی حفظ شود و هذیان نگوید
-            max_tokens=300
-        )
-        
-        ai_reply = response.choices[0].message.content
+        try:
+            # اول تلاش میکنیم از Gemini جواب بگیریم
+            response = gemini_client.chat.completions.create(
+                model=GEMINI_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT.replace("{CLINIC_PROTOCOLS}", CLINIC_PROTOCOLS)},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=0.3,
+                max_tokens=300
+            )
+            ai_reply = response.choices[0].message.content
+        except Exception as gemini_err:
+            print(f"Gemini failed: {gemini_err}. Switching to OpenRouter...")
+            # اگر Gemini ارور داد یا تحریم بود، خودکار سوییچ میکند روی OpenRouter
+            response = openrouter_client.chat.completions.create(
+                model=OPENROUTER_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT.replace("{CLINIC_PROTOCOLS}", CLINIC_PROTOCOLS)},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=0.3,
+                max_tokens=300
+            )
+            ai_reply = response.choices[0].message.content
+            
         return jsonify({"reply": ai_reply})
         
     except Exception as e:
-        print(f"AI Error: {e}")
+        print(f"AI Error (Both models failed): {e}")
         return jsonify({"reply": "متاسفانه دستیار هوشمند در حال حاضر قطع است، پیام شما به پزشک ارجاع داده شد 🌸"}), 500
 
 if __name__ == '__main__':
